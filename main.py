@@ -1,4 +1,6 @@
 import pgzrun
+import pygame as pg
+
 
 WIDTH = 800
 HEIGHT = 600
@@ -22,7 +24,8 @@ class Paddle:
             self.x = WIDTH-100
         
     def check_collision(self, ball):
-        if ball.x > self.x and ball.x < self.x + self.width and ball.y > self.y and ball.y < self.y + self.height:
+        if ball.x + ball.radius > self.x and ball.x < self.x + self.width and ball.y + ball.radius > self.y and ball.y < self.y + self.height:
+        #if ball.x > self.x and ball.x < self.x + self.width and ball.y > self.y and ball.y < self.y + self.height:
             ball.VelocityY = -ball.VelocityY
 
 class Ball:
@@ -30,11 +33,11 @@ class Ball:
         self.x = x
         self.y = y
         self.radius = radius
-        self.VelocityX = 2
-        self.VelocityY = 2
+        self.VelocityX = 5
+        self.VelocityY = 5
 
     def draw(self):
-        screen.draw.filled_circle((self.x, self.y), self.radius, (255, 255, 255))
+        screen.draw.filled_circle((self.x, self.y), self.radius, "Red")
 
     def update(self):
         self.x += self.VelocityX
@@ -45,20 +48,106 @@ class Ball:
         if self.y > HEIGHT or self.y < 0:
             self.VelocityY = -self.VelocityY
 
+
+class Brick:
+    def __init__(self, x, y, width, height, lives, colour):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.active = True
+        self.lives = lives
+        self.colour = colour
+        
+    def draw(self):
+        if self.active:
+            screen.draw.filled_rect(Rect((self.x, self.y), (self.width, self.height)), self.colour)
+        
+    def check_collision(self, ball):
+        if self.active and ball.x + ball.radius > self.x and ball.x < self.x + self.width and ball.y + ball.radius > self.y and ball.y < self.y + self.height:
+        #if self.active and ball.x > self.x and ball.x < self.x + self.width and ball.y > self.y and ball.y < self.y + self.height:
+            ball.VelocityY = -ball.VelocityY
+            self.lives -= 1
+            if self.lives == 0:
+                self.active = False
+                return True
+        return False
+
+
+light_bricks = []
+medium_bricks = []
+heavy_bricks = []
+
+
+for i in range(5):
+    light_bricks.append(Brick(25+i*150,25*5,140,40, 1, "White"))
+for j in range(5):
+    medium_bricks.append(Brick(25+j*150,25*3,140,40, 2, "Blue"))
+for k in range(5):
+    heavy_bricks.append(Brick(25+k*150,25, 140,40, 2, "Black"))
+
+score = 0
+game_over = False
+game_won = False
+lives = 3
 ball = Ball(400, 300, 10)
-paddle = Paddle(120, 550, 100, 100)
+paddle = Paddle(120, 550, 100, 5)
+
+
 
 def draw():
-    screen.clear()
-    screen.fill((123, 221, 65))
-    screen.draw.text("Score: " + str(score), (500, 500), color=(0, 0, 0), background="white")
-    ball.draw()
-    paddle.draw()
-   
+    
+
+    if game_over:
+        screen.clear()
+        if game_won:
+            screen.draw.text('You won!', (360, 300), color=(255,255,255), fontsize=60)
+        else:
+            screen.draw.text('You lost!', (360, 300), color=(255,255,255), fontsize=60)
+    else:
+        screen.clear()
+        screen.fill((123, 221, 65))
+        screen.draw.text("Score: " + str(score), (500, 500), color=(0, 0, 0), background="white")
+        for i in range(lives):
+            screen.blit("arkano.png", (30*i, 40))
+        ball.draw()
+        paddle.draw()
+        for light_brick in light_bricks:
+            light_brick.draw()
+        for medium_brick in medium_bricks:
+            medium_brick.draw()
+        for heavy_brick in heavy_bricks:
+            heavy_brick.draw()
+        
 
 def update(dt):
+    global lives
+    global score
+    global game_over
+    global game_won
     ball.update()
     paddle.update()
+    paddle.check_collision(ball)
+    for light_brick in light_bricks:
+        if light_brick.check_collision(ball):
+            score += 1
+    for medium_brick in medium_bricks:
+        if medium_brick.check_collision(ball):
+            score += 1
+    for heavy_brick in heavy_bricks:
+        if heavy_brick.check_collision(ball):
+            score += 1
 
+    if score == len(light_bricks)+len(medium_bricks)+len(heavy_bricks):
+        game_won = True
+    if ball.y > HEIGHT:
+        lives -= 1
+        ball.x = 400
+        ball.y = 300
+    if lives == 0:
+        game_over = True
+        
+
+  
 
 pgzrun.go()
