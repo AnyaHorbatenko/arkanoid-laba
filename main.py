@@ -1,3 +1,5 @@
+import random
+
 import pgzrun
 import pygame as pg
 
@@ -22,7 +24,7 @@ class Paddle:
             self.x = 0
         if self.x > WIDTH-50:
             self.x = WIDTH-100
-        
+
     def check_collision(self, ball):
         if ball.x + ball.radius > self.x and ball.x < self.x + self.width and ball.y + ball.radius > self.y and ball.y < self.y + self.height:
         #if ball.x > self.x and ball.x < self.x + self.width and ball.y > self.y and ball.y < self.y + self.height:
