@@ -29,6 +29,12 @@ class Paddle:
         if ball.x + ball.radius > self.x and ball.x < self.x + self.width and ball.y + ball.radius > self.y and ball.y < self.y + self.height:
         #if ball.x > self.x and ball.x < self.x + self.width and ball.y > self.y and ball.y < self.y + self.height:
             ball.VelocityY = -ball.VelocityY
+    def check_collision_bonuses(self, bonus):
+        global lives
+        if bonus.x > self.x and bonus.x < self.x + self.width and bonus.y > self.y and bonus.y < self.y + self.height:
+            bonuses.remove(bonus)
+            lives += 1
+    
 
 class Ball:
     def __init__(self, x, y, radius):
@@ -39,7 +45,7 @@ class Ball:
         self.VelocityY = 5
 
     def draw(self):
-        screen.draw.filled_circle((self.x, self.y), self.radius, "Red")
+        screen.draw.filled_circle((self.x, self.y), self.radius, "Yellow")
 
     def update(self):
         self.x += self.VelocityX
@@ -75,6 +81,21 @@ class Brick:
                 return True
         return False
 
+class Bonus:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.width = 20
+        self.height = 20
+        self.velocity = 100
+
+    def draw(self):
+        screen.draw.filled_circle((self.x, self.y), 5, "Purple")
+
+    def move(self,dt):
+         self.y += self.velocity * dt
+
+
 
 light_bricks = []
 medium_bricks = []
@@ -86,7 +107,7 @@ for i in range(5):
 for j in range(5):
     medium_bricks.append(Brick(25+j*150,25*3,140,40, 2, "Blue"))
 for k in range(5):
-    heavy_bricks.append(Brick(25+k*150,25, 140,40, 2, "Black"))
+    heavy_bricks.append(Brick(25+k*150,25, 140,40, 3, "Black"))
 
 score = 0
 game_over = False
@@ -95,6 +116,7 @@ lives = 3
 ball = Ball(400, 300, 10)
 paddle = Paddle(120, 550, 100, 5)
 
+bonuses = []
 
 
 def draw():
@@ -111,9 +133,11 @@ def draw():
         screen.fill((123, 221, 65))
         screen.draw.text("Score: " + str(score), (500, 500), color=(0, 0, 0), background="white")
         for i in range(lives):
-            screen.blit("arkano.png", (30*i, 40))
+            screen.blit("hhh.png", (30*i, 300))
         ball.draw()
         paddle.draw()
+        for bonus in bonuses:
+            bonus.draw()
         for light_brick in light_bricks:
             light_brick.draw()
         for medium_brick in medium_bricks:
@@ -123,13 +147,21 @@ def draw():
         
 
 def update(dt):
-    global lives
+    global lives 
     global score
     global game_over
     global game_won
+    if random.random() > 0.99:
+        new_pos = random.randint(0, WIDTH)
+        bonuses.append(Bonus(new_pos, 10))
+    for bonus in bonuses:
+        bonus.move(dt)
+        
     ball.update()
     paddle.update()
     paddle.check_collision(ball)
+    for bonus in bonuses:
+        paddle.check_collision_bonuses(bonus)
     for light_brick in light_bricks:
         if light_brick.check_collision(ball):
             score += 1
